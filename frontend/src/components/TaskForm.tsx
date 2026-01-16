@@ -20,13 +20,13 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
     setLoading(true);
 
     try {
-      const response: any = await apiClient.post('/tasks', {
+      const response = await apiClient.post<{task: Task}>('/tasks', {
         title,
         description,
         completed: false
       });
 
-      onTaskCreated(response.data.task);
+      onTaskCreated(response.task);
       setTitle('');
       setDescription('');
     } catch (err: any) {

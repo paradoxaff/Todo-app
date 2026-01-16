@@ -33,12 +33,12 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
     setLoadingStates(prev => ({ ...prev, [taskId]: true }));
 
     try {
-      const response: any = await apiClient.put(`/tasks/${taskId}`, {
+      const response = await apiClient.put<{task: Task}>(`/tasks/${taskId}`, {
         title: editTitle,
         description: editDescription
       });
 
-      onTaskUpdated(response.data.task);
+      onTaskUpdated(response.task);
       cancelEditing();
     } catch (error) {
       console.error('Failed to update task:', error);
@@ -64,11 +64,11 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
     setLoadingStates(prev => ({ ...prev, [taskId]: true }));
 
     try {
-      const response: any = await apiClient.patch(`/tasks/${taskId}/complete`, {
+      const response = await apiClient.patch<{task: Task}>(`/tasks/${taskId}/complete`, {
         completed: !currentStatus
       });
 
-      onTaskCompletedToggle(response.data.task);
+      onTaskCompletedToggle(response.task);
     } catch (error) {
       console.error('Failed to toggle task completion:', error);
     } finally {
