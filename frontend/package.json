@@ -23,10 +23,6 @@
   },
   "devDependencies": {
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.22",
-    "@eslint/config-array": "^0.23.0",
-    "@eslint/object-schema": "^3.0.0",
-    "glob": "^10.5.0",
-    "rimraf": "^5.0.10"
+    "eslint-config-next": "^14.2.22"
   }
 }
