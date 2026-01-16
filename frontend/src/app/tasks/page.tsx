@@ -34,19 +34,19 @@ export default function TasksPage() {
     }
   };
 
-  const handleTaskCreated = (newTask) => {
+  const handleTaskCreated = (newTask: Task) => {
     setTasks([newTask, ...tasks]);
   };
 
-  const handleTaskUpdated = (updatedTask) => {
+  const handleTaskUpdated = (updatedTask: Task) => {
     setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
   };
 
-  const handleTaskDeleted = (taskId) => {
+  const handleTaskDeleted = (taskId: string) => {
     setTasks(tasks.filter(task => task.id !== taskId));
   };
 
-  const handleTaskCompletedToggle = (updatedTask) => {
+  const handleTaskCompletedToggle = (updatedTask: Task) => {
     setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
   };
 
