@@ -4,6 +4,7 @@ interface TabsProps {
   value: string;
   onValueChange: (value: string) => void;
   className?: string;
+  children: React.ReactNode;
 }
 
 interface TabsListProps {
