@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { apiClient } from '../services/api';
 import { Task } from '../types/task';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface TaskListProps {
   tasks: Task[];
@@ -16,6 +17,7 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [loadingStates, setLoadingStates] = useState<{[key: string]: boolean}>({});
+  const { darkMode } = useTheme();
 
   const startEditing = (task: Task) => {
     setEditingTaskId(task.id);
@@ -33,12 +35,12 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
     setLoadingStates(prev => ({ ...prev, [taskId]: true }));
 
     try {
-      const response = await apiClient.put<{task: Task}>(`/tasks/${taskId}`, {
+      const response = await apiClient.put<{data: {task: Task}}>(`/tasks/${taskId}`, {
         title: editTitle,
         description: editDescription
       });
 
-      onTaskUpdated(response.task);
+      onTaskUpdated(response.data.task);
       cancelEditing();
     } catch (error) {
       console.error('Failed to update task:', error);
@@ -64,11 +66,9 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
     setLoadingStates(prev => ({ ...prev, [taskId]: true }));
 
     try {
-      const response = await apiClient.patch<{task: Task}>(`/tasks/${taskId}/complete`, {
-        completed: !currentStatus
-      });
+      const response = await apiClient.patch<{data: {task: Task}}>(`/tasks/${taskId}/complete?completed=${!currentStatus}`);
 
-      onTaskCompletedToggle(response.task);
+      onTaskCompletedToggle(response.data.task);
     } catch (error) {
       console.error('Failed to toggle task completion:', error);
     } finally {
@@ -78,19 +78,22 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {tasks.map((task) => (
+      {tasks.filter(t => t && t.id).map((task) => (
         <div
           key={task.id}
           style={{
-            border: '1px solid #ccc',
+            border: `1px solid ${darkMode ? '#4a5568' : '#ccc'}`,
             borderRadius: '8px',
             padding: '1rem',
             marginBottom: '1rem',
-            backgroundColor: task.completed ? '#f8f9fa' : 'white',
-            opacity: task.completed ? 0.8 : 1
+            backgroundColor: darkMode
+              ? (task?.completed ? '#2d3748' : '#1a202c')
+              : (task?.completed ? '#f8f9fa' : 'white'),
+            opacity: task?.completed ? 0.8 : 1,
+            color: darkMode ? 'white' : 'inherit'
           }}
         >
-          {editingTaskId === task.id ? (
+          {editingTaskId === task?.id ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <input
                 type="text"
@@ -98,8 +101,10 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
                 onChange={(e) => setEditTitle(e.target.value)}
                 style={{
                   padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px'
+                  border: `1px solid ${darkMode ? '#4a5568' : '#ccc'}`,
+                  borderRadius: '4px',
+                  backgroundColor: darkMode ? '#2d3748' : 'white',
+                  color: darkMode ? 'white' : 'black'
                 }}
               />
               <textarea
@@ -108,8 +113,10 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
                 rows={3}
                 style={{
                   padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px'
+                  border: `1px solid ${darkMode ? '#4a5568' : '#ccc'}`,
+                  borderRadius: '4px',
+                  backgroundColor: darkMode ? '#2d3748' : 'white',
+                  color: darkMode ? 'white' : 'black'
                 }}
               />
               <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '0.5rem' }}>
@@ -118,7 +125,9 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
                   disabled={loadingStates[task.id]}
                   style={{
                     padding: '0.5rem 1rem',
-                    backgroundColor: loadingStates[task.id] ? '#ccc' : '#28a745',
+                    backgroundColor: loadingStates[task.id]
+                      ? (darkMode ? '#718096' : '#ccc')
+                      : (darkMode ? '#38a169' : '#28a745'),
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -131,7 +140,7 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
                   onClick={cancelEditing}
                   style={{
                     padding: '0.5rem 1rem',
-                    backgroundColor: '#6c757d',
+                    backgroundColor: darkMode ? '#4a5568' : '#6c757d',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -151,36 +160,45 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
                       fontSize: '1.1rem',
                       fontWeight: 'bold',
                       marginBottom: '0.5rem',
-                      textDecoration: task.completed ? 'line-through' : 'none',
-                      color: task.completed ? '#6c757d' : '#000'
+                      textDecoration: task?.completed ? 'line-through' : 'none',
+                      color: darkMode
+                        ? (task?.completed ? '#a0aec0' : 'white')
+                        : (task?.completed ? '#6c757d' : '#000')
                     }}
                   >
-                    {task.title}
+                    {task?.title || ''}
                   </h3>
-                  {task.description && (
-                    <p style={{ color: '#6c757d', marginBottom: '1rem' }}>{task.description}</p>
+                  {task?.description && (
+                    <p style={{
+                      color: darkMode ? '#a0aec0' : '#6c757d',
+                      marginBottom: '1rem'
+                    }}>
+                      {task?.description}
+                    </p>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
-                    onClick={() => toggleTaskCompletion(task.id, task.completed)}
-                    disabled={loadingStates[task.id]}
+                    onClick={() => toggleTaskCompletion(task.id, task?.completed)}
+                    disabled={loadingStates[task?.id]}
                     style={{
                       padding: '0.25rem 0.75rem',
-                      backgroundColor: task.completed ? '#ffc107' : '#28a745',
+                      backgroundColor: task?.completed
+                        ? (darkMode ? '#ecc94b' : '#ffc107')
+                        : (darkMode ? '#38a169' : '#28a745'),
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: loadingStates[task.id] ? 'not-allowed' : 'pointer'
+                      cursor: loadingStates[task?.id] ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    {loadingStates[task.id] ? '...' : task.completed ? 'Undo' : 'Complete'}
+                    {loadingStates[task?.id] ? '...' : task?.completed ? 'Undo' : 'Complete'}
                   </button>
                   <button
                     onClick={() => startEditing(task)}
                     style={{
                       padding: '0.25rem 0.75rem',
-                      backgroundColor: '#007bff',
+                      backgroundColor: darkMode ? '#4299e1' : '#007bff',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
@@ -193,7 +211,7 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
                     onClick={() => deleteTask(task.id)}
                     style={{
                       padding: '0.25rem 0.75rem',
-                      backgroundColor: '#dc3545',
+                      backgroundColor: darkMode ? '#e53e3e' : '#dc3545',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
@@ -204,8 +222,8 @@ export default function TaskList({ tasks, onTaskUpdated, onTaskDeleted, onTaskCo
                   </button>
                 </div>
               </div>
-              <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#6c757d' }}>
-                Created: {new Date(task.createdAt).toLocaleString()}
+              <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: darkMode ? '#a0aec0' : '#6c757d' }}>
+                Created: {task?.createdAt ? new Date(task.createdAt).toLocaleString() : ''}
               </div>
             </div>
           )}

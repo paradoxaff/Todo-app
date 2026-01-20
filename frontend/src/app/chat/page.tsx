@@ -23,7 +23,7 @@ export default function ChatPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || !user?.id) return;
 
     // Add user message
     const newUserMessage = {
@@ -36,16 +36,47 @@ export default function ChatPage() {
     setInputMessage('');
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Call the chat API endpoint
+      const response = await fetch(`/api/${user.id}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputMessage,
+          conversationId: localStorage.getItem('conversationId') || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.conversationId) {
+        localStorage.setItem('conversationId', data.conversationId);
+      }
+
+      // Add AI response
       const aiResponse = {
         id: messages.length + 2,
-        text: `I received your message: "${inputMessage}". How can I assist you with your tasks?`,
+        text: data.response,
         sender: 'ai' as const
       };
+
       setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+
+      // Add error message
+      const errorMessage = {
+        id: messages.length + 2,
+        text: 'Sorry, I encountered an error processing your request. Please try again.',
+        sender: 'ai' as const
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleLogout = () => {
