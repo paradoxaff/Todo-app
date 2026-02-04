@@ -42,15 +42,14 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     const result = await mcpToolsInstance.list_tasks({ user_id: userId, status });
     if (result.success) {
       if (result.tasks.length === 0) {
-        return `You don't have any ${status === 'all' ? 'tasks' : status} tasks right now.`;
+        return "You don't have any " + (status === 'all' ? 'tasks' : status) + " tasks right now.";
       }
 
       const taskList = result.tasks.map((task: any, index: number) =>
-        `${index + 1}. ${task.title} ${task.completed ? '(completed)' : '(pending)'}`
+        (index + 1) + ". " + task.title + " " + (task.completed ? '(completed)' : '(pending)')
       ).join('\\n');
 
-      return `Here are your ${status === 'all' ? 'tasks' : status}:
-${taskList}`;
+      return "Here are your " + (status === 'all' ? 'tasks' : status) + ":\n" + taskList;
     }
     return "I couldn't retrieve your tasks. Please try again.";
   }
@@ -64,14 +63,14 @@ ${taskList}`;
     }
 
     // Look for task by index (e.g., "complete task 1")
-    const indexMatch = userMessage.match(/(?:task|number|no\\.?)\\s*(\\d+)/i);
+    const indexMatch = userMessage.match(/(?:task|number|no\.?)\s*(\d+)/i);
     if (indexMatch) {
       const index = parseInt(indexMatch[1]) - 1;
       if (index >= 0 && index < allTasks.length) {
         const taskToComplete = allTasks[index];
         const result = await mcpToolsInstance.complete_task({ user_id: userId, task_id: taskToComplete.id });
         if (result.success) {
-          return `I've marked "${result.task.title}" as completed. Great job!`;
+          return "I've marked \"" + result.task.title + "\" as completed. Great job!";
         }
       }
     }
@@ -80,13 +79,13 @@ ${taskList}`;
     const nonCompletedTasks = allTasks.filter((task: any) => !task.completed);
     if (nonCompletedTasks.length > 0) {
       // Try to match based on keywords in the user message
-      const messageKeywords = lowerMsg.split(/\\s+/).filter(word => word.length > 2);
+      const messageKeywords = lowerMsg.split(/\s+/).filter(word => word.length > 2);
       for (const task of nonCompletedTasks) {
         const taskTitleLower = task.title.toLowerCase();
         if (messageKeywords.some(keyword => taskTitleLower.includes(keyword))) {
           const result = await mcpToolsInstance.complete_task({ user_id: userId, task_id: task.id });
           if (result.success) {
-            return `I've marked "${result.task.title}" as completed. Nice work!`;
+            return "I've marked \"" + result.task.title + "\" as completed. Nice work!";
           }
         }
       }
@@ -96,11 +95,9 @@ ${taskList}`;
     const pendingTasks = allTasks.filter((task: any) => !task.completed);
     if (pendingTasks.length > 0) {
       const taskList = pendingTasks.slice(0, 5).map((task: any, index: number) =>
-        `${index + 1}. ${task.title}`
+        (index + 1) + ". " + task.title
       ).join('\\n');
-      return `I couldn't determine which task to complete. Here are your pending tasks:
-${taskList}
-Please specify which one you want to mark as complete.`;
+      return "I couldn't determine which task to complete. Here are your pending tasks:\n" + taskList + "\nPlease specify which one you want to mark as complete.";
     }
 
     return "All your tasks are already completed! Nothing to complete.";
@@ -114,37 +111,35 @@ Please specify which one you want to mark as complete.`;
     }
 
     // Look for task by index
-    const indexMatch = userMessage.match(/(?:task|number|no\\.?)\\s*(\\d+)/i);
+    const indexMatch = userMessage.match(/(?:task|number|no\.?)\s*(\d+)/i);
     if (indexMatch) {
       const index = parseInt(indexMatch[1]) - 1;
       if (index >= 0 && index < allTasks.length) {
         const taskToDelete = allTasks[index];
         const result = await mcpToolsInstance.delete_task({ user_id: userId, task_id: taskToDelete.id });
         if (result.success) {
-          return `I've deleted "${taskToDelete.title}" from your task list.`;
+          return "I've deleted \"" + taskToDelete.title + "\" from your task list.";
         }
       }
     }
 
     // Look for task by keyword in title/description
-    const messageKeywords = lowerMsg.split(/\\s+/).filter(word => word.length > 2);
+    const messageKeywords = lowerMsg.split(/\s+/).filter(word => word.length > 2);
     for (const task of allTasks) {
       const taskTitleLower = task.title.toLowerCase();
       if (messageKeywords.some(keyword => taskTitleLower.includes(keyword))) {
         const result = await mcpToolsInstance.delete_task({ user_id: userId, task_id: task.id });
         if (result.success) {
-          return `I've deleted "${task.title}" from your task list.`;
+          return "I've deleted \"" + task.title + "\" from your task list.";
         }
       }
     }
 
     // If no specific task matched, offer to list tasks
     const taskList = allTasks.slice(0, 5).map((task: any, index: number) =>
-      `${index + 1}. ${task.title}`
+      (index + 1) + ". " + task.title
     ).join('\\n');
-    return `I couldn't determine which task to delete. Here are your tasks:
-${taskList}
-Please specify which one you want to remove.`;
+    return "I couldn't determine which task to delete. Here are your tasks:\n" + taskList + "\nPlease specify which one you want to remove.";
   }
 
   // Update task intent
@@ -155,12 +150,12 @@ Please specify which one you want to remove.`;
     }
 
     // Look for task by index
-    const indexMatch = userMessage.match(/(?:task|number|no\\.?)\\s*(\\d+)/i);
+    const indexMatch = userMessage.match(/(?:task|number|no\.?)\s*(\d+)/i);
     if (indexMatch) {
       const index = parseInt(indexMatch[1]) - 1;
       if (index >= 0 && index < allTasks.length) {
         // Extract new title from message
-        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\\s+(?:task\\s+\\d+\\s+to|task\\s+\\d+\\s+as|to|as)\\s+(.+)/i);
+        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\s+(?:task\s+\d+\s+to|task\s+\d+\s+as|to|as)\s+(.+)/i);
         if (titleMatch && titleMatch[1]) {
           const newTitle = titleMatch[1].trim();
           const result = await mcpToolsInstance.update_task({
@@ -169,19 +164,19 @@ Please specify which one you want to remove.`;
             title: newTitle
           });
           if (result.success) {
-            return `I've updated the task to "${result.task.title}".`;
+            return "I've updated the task to \"" + result.task.title + "\".";
           }
         }
       }
     }
 
     // Look for task by keyword and extract new content
-    const messageKeywords = lowerMsg.split(/\\s+/).filter(word => word.length > 2);
+    const messageKeywords = lowerMsg.split(/\s+/).filter(word => word.length > 2);
     for (const task of allTasks) {
       const taskTitleLower = task.title.toLowerCase();
       if (messageKeywords.some(keyword => taskTitleLower.includes(keyword))) {
         // Extract new title from message
-        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\\s+(?:task|to|as)\\s+(.+)/i);
+        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\s+(?:task|to|as)\s+(.+)/i);
         if (titleMatch && titleMatch[1]) {
           const newTitle = titleMatch[1].trim();
           const result = await mcpToolsInstance.update_task({
@@ -190,7 +185,7 @@ Please specify which one you want to remove.`;
             title: newTitle
           });
           if (result.success) {
-            return `I've updated the task to "${result.task.title}".`;
+            return "I've updated the task to \"" + result.task.title + "\".";
           }
         }
       }
@@ -198,18 +193,16 @@ Please specify which one you want to remove.`;
 
     // If no specific task matched, offer to list tasks
     const taskList = allTasks.slice(0, 5).map((task: any, index: number) =>
-      `${index + 1}. ${task.title}`
+      (index + 1) + ". " + task.title
     ).join('\\n');
-    return `I couldn't determine which task to update. Here are your tasks:
-${taskList}
-To update a task, say something like "Update task 1 to 'new title'" or "Change the grocery task to 'buy fruits and vegetables'"`;
+    return "I couldn't determine which task to update. Here are your tasks:\n" + taskList + "\nTo update a task, say something like \"Update task 1 to 'new title'\" or \"Change the grocery task to 'buy fruits and vegetables'\"";
   }
 
   // For any request that seems like a potential task creation, just create it directly
   // This makes the bot extremely permissive for task creation
   const cleanedMessage = userMessage
-    .replace(/(please|kindly|could you|would you|i need|i want|i should|get me|buy me)\\s*/gi, '')
-    .replace(/^\\s+|\\s+$/g, '');
+    .replace(/(please|kindly|could you|would you|i need|i want|i should|get me|buy me)\s*/gi, '')
+    .replace(/^\s+|\s+$/g, '');
 
   if (cleanedMessage && cleanedMessage.length > 1) {
     // Check if it's not a generic request or question
@@ -218,20 +211,13 @@ To update a task, say something like "Update task 1 to 'new title'" or "Change t
     if (!isGeneric) {
       const result = await mcpToolsInstance.add_task({ user_id: userId, title: cleanedMessage });
       if (result.success) {
-        return `Great! I've added "${result.task.title}" to your task list. You can now see it in your task manager.`;
+        return "Great! I've added \"" + result.task.title + "\" to your task list. You can now see it in your task manager.";
       }
     }
   }
 
   // Default response
-  return \`Hello! I'm your AI assistant for managing tasks. You can ask me to:
-  - Add tasks: "Add a task to buy groceries"
-  - List tasks: "Show my tasks" or "What do I have to do?"
-  - Complete tasks: "Complete task 1" or "Mark the meeting as done"
-  - Delete tasks: "Delete the old task" or "Remove task 2"
-  - Update tasks: "Update task 1 to 'call mom'" or "Change the doctor appointment to next week"
-
-  What would you like to do?\`;
+  return "Hello! I'm your AI assistant for managing tasks. You can ask me to:\n  - Add tasks: \"Add a task to buy groceries\"\n  - List tasks: \"Show my tasks\" or \"What do I have to do?\"\n  - Complete tasks: \"Complete task 1\" or \"Mark the meeting as done\"\n  - Delete tasks: \"Delete the old task\" or \"Remove task 2\"\n  - Update tasks: \"Update task 1 to 'call mom'\" or \"Change the doctor appointment to next week\"\n\n  What would you like to do?";
 };
 
 export async function POST(request: NextRequest, { params }: { params: { userId: string | null } }) {
@@ -250,7 +236,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
       // Extract token from cookie
       const tokenMatch = cookieHeader.match(/token=([^;]+)/);
       if (tokenMatch) {
-        authToken = \`Bearer \${tokenMatch[1]}\`;
+        authToken = "Bearer " + tokenMatch[1];
       }
     }
 
@@ -270,7 +256,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks\`, {
+            const response = await fetch(BACKEND_BASE_URL + "/api/tasks", {
               method: 'POST',
               headers,
               body: JSON.stringify({
@@ -285,7 +271,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when adding task');
                 return { success: false, error: 'Authentication required to add tasks' };
               }
-              throw new Error(\`Failed to add task: \${response.statusText}\`);
+              throw new Error("Failed to add task: " + response.statusText);
             }
 
             const result = await response.json();
@@ -316,7 +302,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks\`, {
+            const response = await fetch(BACKEND_BASE_URL + "/api/tasks", {
               headers
             });
 
@@ -325,7 +311,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when listing tasks');
                 return { success: false, error: 'Authentication required to list tasks' };
               }
-              throw new Error(\`Failed to list tasks: \${response.statusText}\`);
+              throw new Error("Failed to list tasks: " + response.statusText);
             }
 
             const result = await response.json();
@@ -358,7 +344,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks/\${params.task_id}/complete?completed=true\`, {
+            const response = await fetch(BACKEND_BASE_URL + "/api/tasks/" + params.task_id + "/complete?completed=true", {
               method: 'PATCH',
               headers
             });
@@ -368,7 +354,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when completing task');
                 return { success: false, error: 'Authentication required to complete tasks' };
               }
-              throw new Error(\`Failed to complete task: \${response.statusText}\`);
+              throw new Error("Failed to complete task: " + response.statusText);
             }
 
             const result = await response.json();
@@ -399,7 +385,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks/\${params.task_id}\`, {
+            const response = await fetch(BACKEND_BASE_URL + "/api/tasks/" + params.task_id, {
               method: 'DELETE',
               headers
             });
@@ -409,7 +395,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when deleting task');
                 return { success: false, error: 'Authentication required to delete tasks' };
               }
-              throw new Error(\`Failed to delete task: \${response.statusText}\`);
+              throw new Error("Failed to delete task: " + response.statusText);
             }
 
             return { success: true };
@@ -429,7 +415,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks/\${params.task_id}\`, {
+            const response = await fetch(BACKEND_BASE_URL + "/api/tasks/" + params.task_id, {
               method: 'PUT',
               headers,
               body: JSON.stringify({
@@ -443,7 +429,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when updating task');
                 return { success: false, error: 'Authentication required to update tasks' };
               }
-              throw new Error(\`Failed to update task: \${response.statusText}\`);
+              throw new Error("Failed to update task: " + response.statusText);
             }
 
             const result = await response.json();
@@ -481,7 +467,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     const response = await processNaturalLanguage(message, userId, mcpToolsInstanceWithAuth);
 
     return NextResponse.json({
-      conversationId: conversationId || \`conv_\${Date.now()}\`,
+      conversationId: conversationId || "conv_" + Date.now(),
       response,
       mcpToolCalls: []
     });
