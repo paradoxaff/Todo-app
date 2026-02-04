@@ -226,8 +226,23 @@ export async function POST(request: NextRequest) {
     // Get the authorization header from the request to pass to backend API calls
     const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
 
+    // Also check for the token in cookies if not in headers
+    const cookieHeader = request.headers.get('cookie');
+    let authToken = authHeader;
+
+    if (!authToken && cookieHeader) {
+      // Extract token from cookie
+      const tokenMatch = cookieHeader.match(/token=([^;]+)/);
+      if (tokenMatch) {
+        authToken = `Bearer ${tokenMatch[1]}`;
+      }
+    }
+
     // Create a modified mcpToolsInstance that includes the auth header
-    const createMcpTools = (authToken?: string) => {
+    const createMcpTools = (requestAuthToken?: string) => {
+      // Use the extracted authToken (from headers or cookies) or fall back to requestAuthToken parameter
+      const effectiveAuthToken = authToken || requestAuthToken;
+
       return {
         add_task: async (params: { user_id: string; title: string; description?: string }) => {
           try {
@@ -235,8 +250,8 @@ export async function POST(request: NextRequest) {
               'Content-Type': 'application/json',
             };
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/tasks`, {
@@ -281,8 +296,8 @@ export async function POST(request: NextRequest) {
           try {
             const headers: Record<string, string> = {};
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/tasks`, {
@@ -323,8 +338,8 @@ export async function POST(request: NextRequest) {
               'Content-Type': 'application/json',
             };
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/tasks/${params.task_id}/complete?completed=true`, {
@@ -364,8 +379,8 @@ export async function POST(request: NextRequest) {
           try {
             const headers: Record<string, string> = {};
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/tasks/${params.task_id}`, {
@@ -394,8 +409,8 @@ export async function POST(request: NextRequest) {
               'Content-Type': 'application/json',
             };
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
             const response = await fetch(`${BACKEND_BASE_URL}/api/tasks/${params.task_id}`, {
@@ -446,7 +461,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Process the natural language message using enhanced NLU with the authenticated tools
-    const mcpToolsInstanceWithAuth = createMcpTools(authHeader);
+    const mcpToolsInstanceWithAuth = createMcpTools(); // Pass no parameter since we use the extracted authToken
     const response = await processNaturalLanguage(message, userId, mcpToolsInstanceWithAuth);
 
     return NextResponse.json({

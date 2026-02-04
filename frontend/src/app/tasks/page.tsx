@@ -77,6 +77,7 @@ export default function TasksPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` || '', // Include auth token
         },
         body: JSON.stringify({
           message: inputText,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Server-side functions to interact with the backend API directly
-const BACKEND_BASE_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
 
 // Default MCP tools that call the backend API directly (without auth - will be overridden in POST handler)
 const mcpTools = {
@@ -47,9 +47,10 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
 
       const taskList = result.tasks.map((task: any, index: number) =>
         `${index + 1}. ${task.title} ${task.completed ? '(completed)' : '(pending)'}`
-      ).join('\n');
+      ).join('\\n');
 
-      return `Here are your ${status === 'all' ? 'tasks' : status}:\n${taskList}`;
+      return `Here are your ${status === 'all' ? 'tasks' : status}:
+${taskList}`;
     }
     return "I couldn't retrieve your tasks. Please try again.";
   }
@@ -63,7 +64,7 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     }
 
     // Look for task by index (e.g., "complete task 1")
-    const indexMatch = userMessage.match(/(?:task|number|no\.?)\s*(\d+)/i);
+    const indexMatch = userMessage.match(/(?:task|number|no\\.?)\\s*(\\d+)/i);
     if (indexMatch) {
       const index = parseInt(indexMatch[1]) - 1;
       if (index >= 0 && index < allTasks.length) {
@@ -79,7 +80,7 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     const nonCompletedTasks = allTasks.filter((task: any) => !task.completed);
     if (nonCompletedTasks.length > 0) {
       // Try to match based on keywords in the user message
-      const messageKeywords = lowerMsg.split(/\s+/).filter(word => word.length > 2);
+      const messageKeywords = lowerMsg.split(/\\s+/).filter(word => word.length > 2);
       for (const task of nonCompletedTasks) {
         const taskTitleLower = task.title.toLowerCase();
         if (messageKeywords.some(keyword => taskTitleLower.includes(keyword))) {
@@ -96,8 +97,10 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     if (pendingTasks.length > 0) {
       const taskList = pendingTasks.slice(0, 5).map((task: any, index: number) =>
         `${index + 1}. ${task.title}`
-      ).join('\n');
-      return `I couldn't determine which task to complete. Here are your pending tasks:\n${taskList}\nPlease specify which one you want to mark as complete.`;
+      ).join('\\n');
+      return `I couldn't determine which task to complete. Here are your pending tasks:
+${taskList}
+Please specify which one you want to mark as complete.`;
     }
 
     return "All your tasks are already completed! Nothing to complete.";
@@ -111,7 +114,7 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     }
 
     // Look for task by index
-    const indexMatch = userMessage.match(/(?:task|number|no\.?)\s*(\d+)/i);
+    const indexMatch = userMessage.match(/(?:task|number|no\\.?)\\s*(\\d+)/i);
     if (indexMatch) {
       const index = parseInt(indexMatch[1]) - 1;
       if (index >= 0 && index < allTasks.length) {
@@ -124,7 +127,7 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     }
 
     // Look for task by keyword in title/description
-    const messageKeywords = lowerMsg.split(/\s+/).filter(word => word.length > 2);
+    const messageKeywords = lowerMsg.split(/\\s+/).filter(word => word.length > 2);
     for (const task of allTasks) {
       const taskTitleLower = task.title.toLowerCase();
       if (messageKeywords.some(keyword => taskTitleLower.includes(keyword))) {
@@ -138,8 +141,10 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     // If no specific task matched, offer to list tasks
     const taskList = allTasks.slice(0, 5).map((task: any, index: number) =>
       `${index + 1}. ${task.title}`
-    ).join('\n');
-    return `I couldn't determine which task to delete. Here are your tasks:\n${taskList}\nPlease specify which one you want to remove.`;
+    ).join('\\n');
+    return `I couldn't determine which task to delete. Here are your tasks:
+${taskList}
+Please specify which one you want to remove.`;
   }
 
   // Update task intent
@@ -150,12 +155,12 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     }
 
     // Look for task by index
-    const indexMatch = userMessage.match(/(?:task|number|no\.?)\s*(\d+)/i);
+    const indexMatch = userMessage.match(/(?:task|number|no\\.?)\\s*(\\d+)/i);
     if (indexMatch) {
       const index = parseInt(indexMatch[1]) - 1;
       if (index >= 0 && index < allTasks.length) {
         // Extract new title from message
-        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\s+(?:task\s+\d+\s+to|task\s+\d+\s+as|to|as)\s+(.+)/i);
+        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\\s+(?:task\\s+\\d+\\s+to|task\\s+\\d+\\s+as|to|as)\\s+(.+)/i);
         if (titleMatch && titleMatch[1]) {
           const newTitle = titleMatch[1].trim();
           const result = await mcpToolsInstance.update_task({
@@ -171,12 +176,12 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     }
 
     // Look for task by keyword and extract new content
-    const messageKeywords = lowerMsg.split(/\s+/).filter(word => word.length > 2);
+    const messageKeywords = lowerMsg.split(/\\s+/).filter(word => word.length > 2);
     for (const task of allTasks) {
       const taskTitleLower = task.title.toLowerCase();
       if (messageKeywords.some(keyword => taskTitleLower.includes(keyword))) {
         // Extract new title from message
-        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\s+(?:task|to|as)\s+(.+)/i);
+        const titleMatch = userMessage.match(/(?:update|change|modify|edit)\\s+(?:task|to|as)\\s+(.+)/i);
         if (titleMatch && titleMatch[1]) {
           const newTitle = titleMatch[1].trim();
           const result = await mcpToolsInstance.update_task({
@@ -194,15 +199,17 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
     // If no specific task matched, offer to list tasks
     const taskList = allTasks.slice(0, 5).map((task: any, index: number) =>
       `${index + 1}. ${task.title}`
-    ).join('\n');
-    return `I couldn't determine which task to update. Here are your tasks:\n${taskList}\nTo update a task, say something like "Update task 1 to 'new title'" or "Change the grocery task to 'buy fruits and vegetables'"`;
+    ).join('\\n');
+    return `I couldn't determine which task to update. Here are your tasks:
+${taskList}
+To update a task, say something like "Update task 1 to 'new title'" or "Change the grocery task to 'buy fruits and vegetables'"`;
   }
 
   // For any request that seems like a potential task creation, just create it directly
   // This makes the bot extremely permissive for task creation
   const cleanedMessage = userMessage
-    .replace(/(please|kindly|could you|would you|i need|i want|i should|get me|buy me)\s*/gi, '')
-    .replace(/^\s+|\s+$/g, '');
+    .replace(/(please|kindly|could you|would you|i need|i want|i should|get me|buy me)\\s*/gi, '')
+    .replace(/^\\s+|\\s+$/g, '');
 
   if (cleanedMessage && cleanedMessage.length > 1) {
     // Check if it's not a generic request or question
@@ -217,14 +224,14 @@ const processNaturalLanguage = async (userMessage: string, userId: string | null
   }
 
   // Default response
-  return `Hello! I'm your AI assistant for managing tasks. You can ask me to:
+  return \`Hello! I'm your AI assistant for managing tasks. You can ask me to:
   - Add tasks: "Add a task to buy groceries"
   - List tasks: "Show my tasks" or "What do I have to do?"
   - Complete tasks: "Complete task 1" or "Mark the meeting as done"
   - Delete tasks: "Delete the old task" or "Remove task 2"
   - Update tasks: "Update task 1 to 'call mom'" or "Change the doctor appointment to next week"
 
-  What would you like to do?`;
+  What would you like to do?\`;
 };
 
 export async function POST(request: NextRequest, { params }: { params: { userId: string | null } }) {
@@ -235,8 +242,23 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     // Get the authorization header from the request to pass to backend API calls
     const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
 
+    // Also check for the token in cookies if not in headers
+    const cookieHeader = request.headers.get('cookie');
+    let authToken = authHeader;
+
+    if (!authToken && cookieHeader) {
+      // Extract token from cookie
+      const tokenMatch = cookieHeader.match(/token=([^;]+)/);
+      if (tokenMatch) {
+        authToken = \`Bearer \${tokenMatch[1]}\`;
+      }
+    }
+
     // Create a modified mcpToolsInstance that includes the auth header
-    const createMcpTools = (authToken?: string) => {
+    const createMcpTools = (requestAuthToken?: string) => {
+      // Use the extracted authToken (from headers or cookies) or fall back to requestAuthToken parameter
+      const effectiveAuthToken = authToken || requestAuthToken;
+
       return {
         add_task: async (params: { user_id: string; title: string; description?: string }) => {
           try {
@@ -244,11 +266,11 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               'Content-Type': 'application/json',
             };
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(`${BACKEND_BASE_URL}/api/tasks`, {
+            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks\`, {
               method: 'POST',
               headers,
               body: JSON.stringify({
@@ -263,7 +285,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when adding task');
                 return { success: false, error: 'Authentication required to add tasks' };
               }
-              throw new Error(`Failed to add task: ${response.statusText}`);
+              throw new Error(\`Failed to add task: \${response.statusText}\`);
             }
 
             const result = await response.json();
@@ -290,11 +312,11 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
           try {
             const headers: Record<string, string> = {};
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(`${BACKEND_BASE_URL}/api/tasks`, {
+            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks\`, {
               headers
             });
 
@@ -303,7 +325,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when listing tasks');
                 return { success: false, error: 'Authentication required to list tasks' };
               }
-              throw new Error(`Failed to list tasks: ${response.statusText}`);
+              throw new Error(\`Failed to list tasks: \${response.statusText}\`);
             }
 
             const result = await response.json();
@@ -332,11 +354,11 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               'Content-Type': 'application/json',
             };
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(`${BACKEND_BASE_URL}/api/tasks/${params.task_id}/complete?completed=true`, {
+            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks/\${params.task_id}/complete?completed=true\`, {
               method: 'PATCH',
               headers
             });
@@ -346,7 +368,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when completing task');
                 return { success: false, error: 'Authentication required to complete tasks' };
               }
-              throw new Error(`Failed to complete task: ${response.statusText}`);
+              throw new Error(\`Failed to complete task: \${response.statusText}\`);
             }
 
             const result = await response.json();
@@ -373,11 +395,11 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
           try {
             const headers: Record<string, string> = {};
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(`${BACKEND_BASE_URL}/api/tasks/${params.task_id}`, {
+            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks/\${params.task_id}\`, {
               method: 'DELETE',
               headers
             });
@@ -387,7 +409,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when deleting task');
                 return { success: false, error: 'Authentication required to delete tasks' };
               }
-              throw new Error(`Failed to delete task: ${response.statusText}`);
+              throw new Error(\`Failed to delete task: \${response.statusText}\`);
             }
 
             return { success: true };
@@ -403,11 +425,11 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
               'Content-Type': 'application/json',
             };
 
-            if (authToken) {
-              headers['Authorization'] = authToken;
+            if (effectiveAuthToken) {
+              headers['Authorization'] = effectiveAuthToken;
             }
 
-            const response = await fetch(`${BACKEND_BASE_URL}/api/tasks/${params.task_id}`, {
+            const response = await fetch(\`\${BACKEND_BASE_URL}/api/tasks/\${params.task_id}\`, {
               method: 'PUT',
               headers,
               body: JSON.stringify({
@@ -421,7 +443,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
                 console.error('Authentication error when updating task');
                 return { success: false, error: 'Authentication required to update tasks' };
               }
-              throw new Error(`Failed to update task: ${response.statusText}`);
+              throw new Error(\`Failed to update task: \${response.statusText}\`);
             }
 
             const result = await response.json();
@@ -455,11 +477,11 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     }
 
     // Process the natural language message using enhanced NLU with the authenticated tools
-    const mcpToolsInstanceWithAuth = createMcpTools(authHeader);
+    const mcpToolsInstanceWithAuth = createMcpTools(); // Pass no parameter since we use the extracted authToken
     const response = await processNaturalLanguage(message, userId, mcpToolsInstanceWithAuth);
 
     return NextResponse.json({
-      conversationId: conversationId || `conv_${Date.now()}`,
+      conversationId: conversationId || \`conv_\${Date.now()}\`,
       response,
       mcpToolCalls: []
     });
