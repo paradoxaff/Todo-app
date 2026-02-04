@@ -1,6 +1,6 @@
 # Todo Application
 
-A full-stack web application for managing tasks with user authentication.
+A full-stack web application for managing tasks with user authentication and AI-powered assistance.
 
 ## Features
 
@@ -8,6 +8,9 @@ A full-stack web application for managing tasks with user authentication.
 - Create, read, update, and delete tasks
 - User isolation (users can only see their own tasks)
 - JWT-based authentication
+- AI-powered natural language task management
+- Responsive UI with dark/light mode
+- Real-time task updates
 
 ## Tech Stack
 
@@ -76,3 +79,10 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 ## License
 
 This project is licensed under the MIT License.
+
+## Project Status
+
+✅ **Fully Functional** - All Phase 2 and Phase 3 features implemented
+✅ **Authentication Fixed** - Secure user authentication system
+✅ **AI Integration** - Natural language task management
+✅ **Current Version** - Latest updates pushed to GitHub
